@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import {
   BrowserRouter as Router,
   Route,
-  Switch
+  Switch,
+  Redirect
 } from 'react-router-dom';
 import './App.css';
 import AppShell from './AppShell';
@@ -17,7 +18,38 @@ import Login from './pages/Login';
 import Settings from './pages/Settings';
 import Signup from './pages/Signup';
 import Users from './pages/Users';
+import {AuthContext} from '../src/context/AuthContext'
 
+const AuthenticatedRoute = ({children, ...rest}) => {
+  const authContext = useContext(AuthContext);
+  return(
+<Route {...rest} render={()=> authContext.isAuthenticated()
+? (
+  <AppShell>
+  {children}
+</AppShell>
+) : (
+  <Redirect to='/' />
+)
+} />
+  )
+  
+}
+
+const AdminRoute = ({children, ...rest}) => {
+  const authContext = useContext(AuthContext);
+  return(
+    <Route {...rest} render={()=>authContext.isAuthenticated() && authContext.isAdmin()
+    ? (
+    <AppShell>
+      {children}
+    </AppShell>
+    ): <Redirect to='/' />
+    }
+    
+    />
+  )
+}
 const AppRoutes = () => {
   return (
     <Switch>
@@ -31,14 +63,16 @@ const AppRoutes = () => {
         <Home />
       </Route>
       <Route path="/dashboard">
-        <AppShell>
+        <AuthenticatedRoute>
           <Dashboard />
-        </AppShell>
+        </AuthenticatedRoute>
       </Route>
       <Route path="/inventory">
-        <AppShell>
-          <Inventory />
-        </AppShell>
+        <AdminRoute>
+        <Inventory />
+        </AdminRoute>
+          
+        
       </Route>
       <Route path="/account">
         <AppShell>
@@ -46,14 +80,14 @@ const AppRoutes = () => {
         </AppShell>
       </Route>
       <Route path="/settings">
-        <AppShell>
+        <AdminRoute>
           <Settings />
-        </AppShell>
+        </AdminRoute>
       </Route>
       <Route path="/users">
-        <AppShell>
+        <AuthenticatedRoute>
           <Users />
-        </AppShell>
+        </AuthenticatedRoute>
       </Route>
       <Route path="*">
         <FourOFour />
