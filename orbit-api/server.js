@@ -136,13 +136,42 @@ app.post('/api/signup', async (req, res) => {
   }
 });
 
+const attachUser= (req,res,next) => {
+const token = req.headers.authorization;
+
+if(!token){
+  return res.status(401).json({message: 'Authentication invalid'});
+}
+const decodeToken = jwtDecode(token.slice(7))
+
+if(!decodeToken){
+  return res.status(401).json({message: 'There was a problem'})
+}
+else{
+  req.user = decodeToken
+  next()
+}
+}
+
+app.use(attachUser)
+
 const checkJwt = jwt({
   secret:process.env.JWT_SECRET,
   issuer:'api.orbit',
   audience:'api.orbit'
 })
-app.get('/api/dashboard-data', checkJwt, (req, res) =>
-  res.json(dashboardData)
+
+const requireAdmin = (req,res,next) => {
+const {role} = req.user;
+if(role !== 'admin'){
+  return res.status(401).json({message: 'Insufficient role'})
+}
+next()
+}
+
+app.get('/api/dashboard-data', checkJwt, (req, res) =>{
+  console.log(req.user)
+  return res.json(dashboardData)}
 );
 
 app.patch('/api/user-role', async (req, res) => {
@@ -168,18 +197,28 @@ app.patch('/api/user-role', async (req, res) => {
   }
 });
 
-app.get('/api/inventory', async (req, res) => {
+app.get('/api/inventory',checkJwt,requireAdmin, async (req, res) => {
   try {
-    const inventoryItems = await InventoryItem.find();
+    const {sub}  =  req.user;
+    const input = Object.assign({}, req.body, {
+      user: sub
+    })
+    const inventoryItems = await InventoryItem.find({
+      user:sub
+    });
     res.json(inventoryItems);
   } catch (err) {
     return res.status(400).json({ error: err });
   }
 });
 
-app.post('/api/inventory', async (req, res) => {
+app.post('/api/inventory',checkJwt,requireAdmin, async (req, res) => {
   try {
-    const inventoryItem = new InventoryItem(req.body);
+    const {sub}  =  req.user;
+    const input = Object.assign({}, req.body, {
+      user: sub
+    })
+    const inventoryItem = new InventoryItem(input);
     await inventoryItem.save();
     res.status(201).json({
       message: 'Inventory item created!',
@@ -195,8 +234,9 @@ app.post('/api/inventory', async (req, res) => {
 
 app.delete('/api/inventory/:id', async (req, res) => {
   try {
+    const {sub} = req.user
     const deletedItem = await InventoryItem.findOneAndDelete(
-      { _id: req.params.id }
+      { _id: req.params.id, user:sub }
     );
     res.status(201).json({
       message: 'Inventory item deleted!',

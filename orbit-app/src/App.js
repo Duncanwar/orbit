@@ -68,9 +68,9 @@ const AppRoutes = () => {
         </AuthenticatedRoute>
       </Route>
       <Route path="/inventory">
-        <AdminRoute>
+        <AuthenticatedRoute>
         <Inventory />
-        </AdminRoute>
+        </AuthenticatedRoute>
           
         
       </Route>
@@ -85,9 +85,9 @@ const AppRoutes = () => {
         </AdminRoute>
       </Route>
       <Route path="/users">
-        <AuthenticatedRoute>
+        <AdminRoute>
           <Users />
-        </AuthenticatedRoute>
+        </AdminRoute>
       </Route>
       <Route path="*">
         <FourOFour />
