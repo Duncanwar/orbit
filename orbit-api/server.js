@@ -44,7 +44,6 @@ app.post('/api/authenticate', async (req, res) => {
     if (passwordValid) {
       const { password, bio, ...rest } = user;
       const userInfo = Object.assign({}, { ...rest });
-
       const token = createToken(userInfo);
 
       const decodedToken = jwtDecode(token);
@@ -170,7 +169,7 @@ next()
 }
 
 app.get('/api/dashboard-data', checkJwt, (req, res) =>{
-  console.log(req.user)
+
   return res.json(dashboardData)}
 );
 
