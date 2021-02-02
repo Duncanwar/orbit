@@ -71,8 +71,6 @@ const AppRoutes = () => {
         <AuthenticatedRoute>
         <Inventory />
         </AuthenticatedRoute>
-          
-        
       </Route>
       <Route path="/account">
         <AppShell>
